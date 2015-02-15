@@ -1,0 +1,17 @@
+{
+    "name": "audtwit-demo",
+    "version": "0.0.1",
+    "dependencies":
+    {
+        "body-parser": "*",
+        "bower": "*",   
+        "cookie-parser": "*",
+        "ejs": "*",
+        "express": "4.8.7",
+        "express-session": "1.7.6",
+        "mysql": "*",
+        "passport": "*",
+        "passport-twitter": "*"
+    }
+}
+
