@@ -9,7 +9,7 @@
         "ejs": "*",
         "express": "4.8.7",
         "express-session": "1.7.6",
-        "mysql": "*",
+        "mongoose": "*",
         "passport": "*",
         "passport-twitter": "*"
     }

@@ -6,7 +6,7 @@ var express = require('express')
 , cookieParser = require('cookie-parser')
 , bodyParser = require('body-parser')
 , config = require('./configuration/config')
-, mysql = require('mysql')
+, mongoose = require('mongoose')
 , app = express();
 
 // Passport session setup.
@@ -17,6 +17,21 @@ done(null, user);
 passport.deserializeUser(function(obj, done) {
 done(null, obj);
 });
+
+//testing User
+
+var UserSchema = new mongoose.Schema({
+  provider: String,
+  uid: String,
+  name: String,
+  image: String,
+  created: {type: Date, default: Date.now}
+});
+
+mongoose.connect('mongodb://localhost/twitaud');
+mongoose.model('User', UserSchema);
+
+var User = mongoose.model('User');
 
 //DEBUG
 //console.log("CONFIG:"+JSON.stringify(config));
@@ -29,10 +44,24 @@ passport.use(new TwitterStrategy({
 	callbackURL: config.callback_url
 	},
 	function(token, tokenSecret, profile, done) {
-		process.nextTick(function () {
-		});
+	User.findOne({uid: profile.id}, function(err, user) {
+      if(user) {
+        done(null, user);
+      } else {
+        var user = new User();
+        user.provider = "twitter";
+        user.uid = profile.id;
+        user.name = profile.displayName;
+        user.image = profile._json.profile_image_url;
+        user.save(function(err) {
+          if(err) { throw err; }
+          done(null, user);
+        });
+
 	}
-	));
+}
+
+	)}));
 
 
 app.set('views', __dirname + '/views');
@@ -62,13 +91,16 @@ app.get('/account', ensureAuthenticated, function(req, res){
 res.render('account', { user: req.user });
 });
 
-app.get('/auth/twitter', passport.authenticate('twitter'));
+app.get('/auth/twitter', passport.authenticate('twitter'),
+  function(req, res) {
+   //nothing
+  });
 
-app.get('/auth/twitter/callback',
-passport.authenticate('twitter', { successRedirect : '/', failureRedirect: '/' }),
-function(req, res) {
-res.redirect('/');
-});
+app.get('/auth/twitter/callback', 
+  passport.authenticate('twitter', { failureRedirect: '/login' }),
+  function(req, res) {
+    res.redirect('/');
+  });
 
 app.get('/logout', function(req, res){
 req.logout();
