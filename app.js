@@ -29,10 +29,56 @@ var UserSchema = new mongoose.Schema({
   created: {type: Date, default: Date.now}
 });
 
+var FollowerSchema = new mongoose.Schema({
+      id: Number,
+      id_str: String,
+      name: String,
+      screen_name: String,
+      location: String,
+      profile_location: String,
+      url: String,
+      description: String,
+      protected: Boolean,
+      followers_count: Number,
+      friends_count: Number,
+      listed_count: Number,
+      created_at: Date,
+      favourites_count: Number,
+      utc_offset: String,
+      time_zone: String,
+      geo_enabled: Boolean,
+      verified: Boolean,
+      statuses_count: Number,
+      lang: String,
+      contributors_enabled : Boolean,
+      is_translator: Boolean,
+      is_translation_enabled: Boolean,
+      profile_background_color: String,
+      profile_background_image_url: String,
+      profile_background_image_url_https: String,
+      profile_background_tile: Boolean,
+      profile_image_url: String,
+      profile_image_url_https: String,
+      profile_link_color: String,
+      profile_sidebar_border_color: String,
+      profile_sidebar_fill_color: String,
+      profile_text_color: String,
+      profile_use_background_image: Boolean,
+      default_profile: Boolean,
+      default_profile_image: Boolean,
+      following: Boolean,
+      follow_request_sent: Boolean,
+      notifications: Boolean,
+      muting: Boolean,
+      twubric: mongoose.Schema.Types.Mixed
+});
+
 mongoose.connect('mongodb://localhost/twitaud');
 mongoose.model('User', UserSchema);
+mongoose.model('Follower', FollowerSchema);
 
 var User = mongoose.model('User');
+var Follower = mongoose.model('Follower');
 
 //DEBUG
 //console.log("CONFIG:"+JSON.stringify(config));
@@ -51,10 +97,10 @@ passport.use(new TwitterStrategy({
 	passReqToCallback: true
 	},
 	function(req, token, tokenSecret, profile, done) {
-	User.findOne({uid: profile.id}, function(err, user) {
       tokenStore  = token;
       tokenStoreSecret = tokenSecret;
       screen_name = profile.screen_name;
+	User.findOne({uid: profile.id}, function(err, user) {
       if(user) {
         done(null, user);
       } else {
@@ -100,19 +146,129 @@ app.get('/', function(req, res){
 res.render('index', { user: req.user });
 });
 
-//test material ui
-app.get('/followers', function(req, res){
 
-TwitObj.get('followers/list', { screen_name: screen_name },  function (err, data, response) {
-  console.log(data)
-  res.json(data);
+next_cursor = null,
+next_cursor_str = "",
+previous_cursor = null,
+previous_cursor_str = "";
+flagfornext = false;
+size = null;
+docArray = [];
+
+app.get('/followers/:key?', function(req, res){
+ var key = req.params.key;
+    if (key) {
+      flagfornext = true;
+    }
+followData = null;
+
+if(!flagfornext){
+  params = { screen_name: screen_name };
+}
+else{
+  params = { screen_name: screen_name, cursor: next_cursor }
+}
+TwitObj.get('followers/list', params ,  function (err, data, response) {
+  //console.log(data);
+  followData = data;
+
+docArray = followData.users;
+next_cursor = followData.next_cursor,
+next_cursor_str = followData.next_cursor_str,
+previous_cursor = followData.previous_cursor,
+previous_cursor_str = followData.previous_cursor_str;
+size = docArray.length;
+
+saveToArray();
+returnValue = {};
+Follower.find({}, function(err, user){
+  returnValue.users = user;
+  res.send(returnValue);
 });
 
 });
 
-app.get('/account', ensureAuthenticated, function(req, res){
-res.render('account', { user: req.user });
 });
+
+function saveToArray(){
+  follower = docArray.pop();
+  Follower.findOne({id: follower.id}, function(err, user) {
+      if(user) {
+      } else {
+      var user = new Follower();
+        
+      user.id = follower.id,
+      user.id_str = follower.id_str,
+      user.name = follower.name,
+      user.screen_name = follower.screen_name,
+      user.location = follower.location,
+      user.profile_location = follower.profile_location,
+      user.url = follower.url,
+      user.description = follower.description,
+      user.protected = follower.protected,
+      user.followers_count = follower.followers_count,
+      user.friends_count = follower.friends_count,
+      user.listed_count = follower.listed_count,
+      user.created_at = follower.created_at,
+      user.favourites_count = follower.favourites_count,
+      user.utc_offset = follower.utc_offset,
+      user.time_zone = follower.time_zone,
+      user.geo_enabled = follower.geo_enabled,
+      user.verified = follower.verified,
+      user.statuses_count = follower.statuses_count,
+      user.lang = follower.lang,
+      user.contributors_enabled = follower.contributors_enabled,
+      user.is_translator = follower.is_translator,
+      user.is_translation_enabled = follower.is_translation_enabled,
+      user.profile_background_color = follower.profile_background_color,
+      user.profile_background_image_url = follower.profile_background_image_url,
+      user.profile_background_image_url_https = follower.profile_background_image_url_https,
+      user.profile_background_tile = follower.profile_background_tile,
+      user.profile_image_url = follower.profile_image_url,
+      user.profile_image_url_https = follower.profile_image_url_https,
+      user.profile_link_color = follower.profile_link_color,
+      user.profile_sidebar_border_color = follower.profile_sidebar_border_color,
+      user.profile_sidebar_fill_color = follower.profile_sidebar_fill_color,
+      user.profile_text_color = follower.profile_text_color,
+      user.profile_use_background_image = follower.profile_use_background_image,
+      user.default_profile = follower.default_profile,
+      user.default_profile_image = follower.default_profile_image,
+      user.following = follower.following,
+      user.follow_request_sent = follower.follow_request_sent,
+      user.notifications = follower.notifications,
+      user.muting = follower.muting,
+      user.twubric = {};
+
+
+        user.save(function(err) {
+        if(err) { throw err; }
+        if(--size){
+          saveToArray();
+        }
+        });
+      }
+  });
+}
+
+
+
+app.get('/followers/id/:user_id', function(req, res){
+  output = {};
+  check = parseInt(req.params.user_id);
+  console.log(check);
+  result = Follower.findOne( { id: check } , function(err, user){
+    if(err){
+
+    }
+    if(user){
+      output=user.toJSON();
+    }
+    res.send(output);
+  });
+
+
+});
+
 
 app.get('/auth/twitter', passport.authenticate('twitter'),
   function(req, res) {

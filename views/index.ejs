@@ -25,11 +25,14 @@
         </div>
     </div>
     <% if (user) { %>
-            <div ng-controller="FollowCtrl">
-        <ul ng-repeat="user in followers.users">
-        <li><h3><span><a href="/followers/{{user.id}}">{{user.screen_name}}</a></span></h3></li>
+        <div ng-controller="FollowCtrl">
+        <ul ng-repeat="follower in followers.users">
+        <li><h3><span><a href="/followers/id/{{follower.id}}">{{follower.screen_name}}</a></span></h3></li>
         </ul>
+        <center  style="padding:10px"><button class="btn btn-primary" ng-disabled="moreButton" ng-click="loadMore()"> More </button></center>
+        </div>
         <% } %>
     </main>
+    
 
 </html>
