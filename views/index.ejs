@@ -1,6 +1,8 @@
-<html>
+<!doctype html>
+<html ng-app="AudTwit">
 <head>
      <% include ./head %>
+     <% include ./footer %>
 </head>
 <body class="container">
 
@@ -15,10 +17,19 @@
             <p>Please login to view twitter follower rubric.</p>
             <a href="/auth/twitter" class="btn btn-info btn-lg" role="button"><span class="glyphicon glyphicon-user"></span> Sign in with Twitter</a>
         <% } else { %>
-            <h2>Hello, <%= user.name %>.</h2>
+            <div>
             <img src="<%= user.image %>"/>
+            <h2>Hello, <%= user.name %>. Here are your followers.</h2>
+            </div>
         <% } %>
         </div>
+    </div>
+    <% if (user) { %>
+            <div ng-controller="FollowCtrl">
+        <ul ng-repeat="user in followers.users">
+        <li><h3><span><a href="/followers/{{user.id}}">{{user.screen_name}}</a></span></h3></li>
+        </ul>
+        <% } %>
     </main>
 
 </html>

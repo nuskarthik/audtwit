@@ -7,7 +7,8 @@ var express = require('express')
 , bodyParser = require('body-parser')
 , config = require('./configuration/config')
 , mongoose = require('mongoose')
-, app = express();
+, app = express(),
+Twit = require('twit');
 
 // Passport session setup.
 passport.serializeUser(function(user, done) {
@@ -38,13 +39,22 @@ var User = mongoose.model('User');
 //console.log(config.host);
 //console.log(config.twitter_api_key + " " + config.twitter_api_secret);
 
+var tokenStore = "";
+var tokenStoreSecret = "";
+var screen_name = "";
+var TwitObj = {};
+
 passport.use(new TwitterStrategy({
 	consumerKey: config.twitter_api_key,
 	consumerSecret: config.twitter_api_secret ,
-	callbackURL: config.callback_url
+	callbackURL: config.callback_url,
+	passReqToCallback: true
 	},
-	function(token, tokenSecret, profile, done) {
+	function(req, token, tokenSecret, profile, done) {
 	User.findOne({uid: profile.id}, function(err, user) {
+      tokenStore  = token;
+      tokenStoreSecret = tokenSecret;
+      screen_name = profile.screen_name;
       if(user) {
         done(null, user);
       } else {
@@ -59,6 +69,13 @@ passport.use(new TwitterStrategy({
         });
 
 	}
+  TwitObj = new Twit({
+    consumer_key:         config.twitter_api_key
+  , consumer_secret:      config.twitter_api_secret
+  , access_token:         tokenStore
+  , access_token_secret:  tokenStoreSecret
+})
+
 }
 
 	)}));
@@ -83,8 +100,14 @@ app.get('/', function(req, res){
 res.render('index', { user: req.user });
 });
 
-app.get('/test', function(req, res){
-res.render('test', {});
+//test material ui
+app.get('/followers', function(req, res){
+
+TwitObj.get('followers/list', { screen_name: screen_name },  function (err, data, response) {
+  console.log(data)
+  res.json(data);
+});
+
 });
 
 app.get('/account', ensureAuthenticated, function(req, res){
@@ -101,6 +124,8 @@ app.get('/auth/twitter/callback',
   function(req, res) {
     res.redirect('/');
   });
+
+//start
 
 app.get('/logout', function(req, res){
 req.logout();
