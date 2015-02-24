@@ -7,6 +7,7 @@ var express = require('express')
 , bodyParser = require('body-parser')
 , config = require('./configuration/config')
 , mongoose = require('mongoose')
+, twubricLib = require('./configuration/twubric')
 , app = express(),
 Twit = require('twit');
 
@@ -192,6 +193,7 @@ Follower.find({}, function(err, user){
 
 function saveToArray(){
   follower = docArray.pop();
+  if(follower){
   Follower.findOne({id: follower.id}, function(err, user) {
       if(user) {
       } else {
@@ -237,7 +239,7 @@ function saveToArray(){
       user.follow_request_sent = follower.follow_request_sent,
       user.notifications = follower.notifications,
       user.muting = follower.muting,
-      user.twubric = {};
+      user.twubric = twubricLib.calculateTwubric(user);
 
 
         user.save(function(err) {
@@ -248,7 +250,8 @@ function saveToArray(){
         });
       }
   });
-}
+  }
+} 
 
 
 

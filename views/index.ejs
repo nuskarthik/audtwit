@@ -26,7 +26,7 @@
     </div>
     <% if (user) { %>
         <div ng-controller="FollowCtrl">
-        <ul ng-repeat="follower in followers.users">
+        <ul ng-repeat="follower in followers.users | unique: 'id'">
         <li><h3><span><a href="/followers/id/{{follower.id}}">{{follower.screen_name}}</a></span></h3></li>
         </ul>
         <center  style="padding:10px"><button class="btn btn-primary" ng-disabled="moreButton" ng-click="loadMore()"> More </button></center>
