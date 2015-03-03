@@ -15,4 +15,8 @@ Based on that I calculate a score for
 	1. friends(how many following vs followed - an indicator of bots) 
 	2. influence(whether they have changed the default pic, got verified, had a tweet favorited, etc.)
 	3. chirpiness(how active they are since they joined)
-		TODO: modify to actually take into account the timestamps of recent activity
+
+
+TODO: 
+	- modify to actually take into account the timestamps of recent activity for chirpiness
+	-fix front end refresh issue
