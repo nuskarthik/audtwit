@@ -6,8 +6,8 @@ var express = require('express')
 , cookieParser = require('cookie-parser')
 , bodyParser = require('body-parser')
 , config = require('./configuration/config')
-, mongoose = require('mongoose')
-, testObj = require('./configuration/twubric')
+, rubric = require('./configuration/twubric')
+, models = require('./configuration/models')
 , app = express(),
 Twit = require('twit');
 
@@ -20,48 +20,9 @@ passport.deserializeUser(function(obj, done) {
 done(null, obj);
 });
 
-//testing User
-
-var UserSchema = new mongoose.Schema({
-  provider: String,
-  uid: String,
-  name: String,
-  image: String,
-  created: {type: Date, default: Date.now}
-});
-
-var FollowerSchema = new mongoose.Schema({
-      id: Number,
-      id_str: String,
-      name: String,
-      screen_name: String,
-      location: String,
-      profile_location: String,
-      url: String,
-      description: String,
-      protected: Boolean,
-      followers_count: Number,
-      friends_count: Number,
-      listed_count: Number,
-      created_at: Date,
-      favourites_count: Number,
-      utc_offset: String,
-      time_zone: String,
-      geo_enabled: Boolean,
-      verified: Boolean,
-      statuses_count: Number,
-      profile_background_image_url: String,
-      profile_image_url: String,
-      default_profile: Boolean,
-      default_profile_image: Boolean,
-      following: Boolean,
-      last_updated: Date,
-      twubric: mongoose.Schema.Types.Mixed
-});
-
 mongoose.connect('mongodb://localhost/twitaud');
-mongoose.model('User', UserSchema);
-mongoose.model('Follower', FollowerSchema);
+mongoose.model('User', models.UserSchema);
+mongoose.model('Follower', models.FollowerSchema);
 
 var User = mongoose.model('User');
 var Follower = mongoose.model('Follower');
@@ -122,7 +83,8 @@ app.use(session({ secret: 'teamie', key: 'karthik'}));
 app.use(passport.initialize());
 app.use(passport.session());
 
-app.use(express.static(__dirname + '/public'));
+app.use("/public", express.static(__dirname + '/public'));
+app.use("/scripts", express.static(__dirname + "/scripts"));
 
 
 //CALLBACKS
@@ -177,9 +139,6 @@ Follower.find({}, function(err, user){
 
 });
 
-
-singleUserDataObject = {};
-
 function saveToArray(){
   follower = docArray.pop();
   if(follower){
@@ -193,7 +152,7 @@ function saveToArray(){
     newcreatedAt = userdata[0].user.created_at;
     }
     else{
-      console.log('ERROR:'+follower.screen_name);
+      console.log('-----> PRIVATE SETTINGS:'+follower.screen_name);
     }
 
   Follower.findOne({id: follower.id}, function(err, user) {
@@ -230,8 +189,8 @@ function saveToArray(){
       temp = follower;
       temp.last_updated = new Date(lastUpdated);
       temp.created_at = new Date(newcreatedAt);
-      console.log(user.screen_name+':'+newcreatedAt+':'+lastUpdated);
-      var result = testObj(temp);
+      console.log(user.screen_name);
+      var result = rubric(temp);
       console.log(result);
       user.twubric = result;
 
