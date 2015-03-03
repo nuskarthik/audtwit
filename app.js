@@ -7,7 +7,7 @@ var express = require('express')
 , bodyParser = require('body-parser')
 , config = require('./configuration/config')
 , mongoose = require('mongoose')
-, twubricLib = require('./configuration/twubric')
+, testObj = require('./configuration/twubric')
 , app = express(),
 Twit = require('twit');
 
@@ -50,27 +50,12 @@ var FollowerSchema = new mongoose.Schema({
       geo_enabled: Boolean,
       verified: Boolean,
       statuses_count: Number,
-      lang: String,
-      contributors_enabled : Boolean,
-      is_translator: Boolean,
-      is_translation_enabled: Boolean,
-      profile_background_color: String,
       profile_background_image_url: String,
-      profile_background_image_url_https: String,
-      profile_background_tile: Boolean,
       profile_image_url: String,
-      profile_image_url_https: String,
-      profile_link_color: String,
-      profile_sidebar_border_color: String,
-      profile_sidebar_fill_color: String,
-      profile_text_color: String,
-      profile_use_background_image: Boolean,
       default_profile: Boolean,
       default_profile_image: Boolean,
       following: Boolean,
-      follow_request_sent: Boolean,
-      notifications: Boolean,
-      muting: Boolean,
+      last_updated: Date,
       twubric: mongoose.Schema.Types.Mixed
 });
 
@@ -180,6 +165,7 @@ previous_cursor = followData.previous_cursor,
 previous_cursor_str = followData.previous_cursor_str;
 size = docArray.length;
 
+//retrieveUserData();
 saveToArray();
 returnValue = {};
 Follower.find({}, function(err, user){
@@ -191,9 +177,25 @@ Follower.find({}, function(err, user){
 
 });
 
+
+singleUserDataObject = {};
+
 function saveToArray(){
   follower = docArray.pop();
   if(follower){
+
+  userparams = { screen_name: follower.screen_name };
+  
+  TwitObj.get('statuses/user_timeline/', userparams, function (error, userdata, userresponse){
+    
+    if(userdata!==undefined){
+    lastUpdated = userdata[0].created_at;
+    newcreatedAt = userdata[0].user.created_at;
+    }
+    else{
+      console.log('ERROR:'+follower.screen_name);
+    }
+
   Follower.findOne({id: follower.id}, function(err, user) {
       if(user) {
       } else {
@@ -211,36 +213,27 @@ function saveToArray(){
       user.followers_count = follower.followers_count,
       user.friends_count = follower.friends_count,
       user.listed_count = follower.listed_count,
-      user.created_at = follower.created_at,
+      user.created_at = new Date(newcreatedAt),
       user.favourites_count = follower.favourites_count,
       user.utc_offset = follower.utc_offset,
       user.time_zone = follower.time_zone,
       user.geo_enabled = follower.geo_enabled,
       user.verified = follower.verified,
       user.statuses_count = follower.statuses_count,
-      user.lang = follower.lang,
-      user.contributors_enabled = follower.contributors_enabled,
-      user.is_translator = follower.is_translator,
-      user.is_translation_enabled = follower.is_translation_enabled,
-      user.profile_background_color = follower.profile_background_color,
       user.profile_background_image_url = follower.profile_background_image_url,
-      user.profile_background_image_url_https = follower.profile_background_image_url_https,
-      user.profile_background_tile = follower.profile_background_tile,
       user.profile_image_url = follower.profile_image_url,
-      user.profile_image_url_https = follower.profile_image_url_https,
-      user.profile_link_color = follower.profile_link_color,
-      user.profile_sidebar_border_color = follower.profile_sidebar_border_color,
-      user.profile_sidebar_fill_color = follower.profile_sidebar_fill_color,
-      user.profile_text_color = follower.profile_text_color,
       user.profile_use_background_image = follower.profile_use_background_image,
       user.default_profile = follower.default_profile,
       user.default_profile_image = follower.default_profile_image,
-      user.following = follower.following,
-      user.follow_request_sent = follower.follow_request_sent,
-      user.notifications = follower.notifications,
-      user.muting = follower.muting,
-      user.twubric = twubricLib.calculateTwubric(user);
-
+      user.following = follower.following;
+      user.last_updated = new Date(lastUpdated);
+      temp = follower;
+      temp.last_updated = new Date(lastUpdated);
+      temp.created_at = new Date(newcreatedAt);
+      console.log(user.screen_name+':'+newcreatedAt+':'+lastUpdated);
+      var result = testObj(temp);
+      console.log(result);
+      user.twubric = result;
 
         user.save(function(err) {
         if(err) { throw err; }
@@ -250,7 +243,9 @@ function saveToArray(){
         });
       }
   });
-  }
+
+});
+}
 } 
 
 
