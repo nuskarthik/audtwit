@@ -10,7 +10,8 @@
     "express-session": "1.7.6",
     "mongoose": "*",
     "passport": "*",
-    "passport-twitter": "*"
+    "passport-twitter": "*",
+    "twit": "^1.1.20"
   },
   "devDependencies": {
     "requests": "0.0.1"

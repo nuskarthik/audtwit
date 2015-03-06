@@ -8,8 +8,8 @@ var express = require('express')
 , config = require('./configuration/config')
 , rubric = require('./configuration/twubric')
 , models = require('./configuration/models')
-, app = express(),
-Twit = require('twit');
+, app = express()
+, Twit = require('twit');
 
 // Passport session setup.
 passport.serializeUser(function(user, done) {
@@ -87,7 +87,7 @@ app.use("/public", express.static(__dirname + '/public'));
 app.use("/scripts", express.static(__dirname + "/scripts"));
 
 
-//CALLBACKS
+//ENDPOINTS
 
 
 app.get('/', function(req, res){
@@ -146,13 +146,14 @@ function saveToArray(){
   userparams = { screen_name: follower.screen_name };
   
   TwitObj.get('statuses/user_timeline/', userparams, function (error, userdata, userresponse){
-    
+    isPrivate = false;
     if(userdata!==undefined){
     lastUpdated = userdata[0].created_at;
     newcreatedAt = userdata[0].user.created_at;
     }
     else{
       console.log('-----> PRIVATE SETTINGS:'+follower.screen_name);
+      isPrivate = true;
     }
 
   Follower.findOne({id: follower.id}, function(err, user) {
@@ -186,6 +187,7 @@ function saveToArray(){
       user.default_profile_image = follower.default_profile_image,
       user.following = follower.following;
       user.last_updated = new Date(lastUpdated);
+      user.is_private = isPrivate;
       temp = follower;
       temp.last_updated = new Date(lastUpdated);
       temp.created_at = new Date(newcreatedAt);
@@ -251,5 +253,6 @@ res.redirect('/login')
 }
 
 app.listen(3000);
-console.log("The magic starts at port 3000");
-
+console.log("Please go to 127.0.0.1:3000 to view AudTwit.");
+var spawn = require('child_process').spawn
+spawn('open', ['127.0.0.1:3000']);

@@ -34,6 +34,7 @@ var FollowerSchema = new mongoose.Schema({
       default_profile_image: Boolean,
       following: Boolean,
       last_updated: Date,
+      is_private: Boolean,
       twubric: mongoose.Schema.Types.Mixed
 });
 

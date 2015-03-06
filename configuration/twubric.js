@@ -61,9 +61,9 @@
     var diff2 = todayMS - createDate;
     console.log(diff1, diff2);
     var chirpyCount = (1 - diff1/diff2)*chirpyScore;
-    chirpyCount = Math.round(chirpyCount*1000)/1000;
 
     var total = friendsCount+influenceCount+chirpyCount;
+    total = Math.round(total*1000)/1000;
 
     var twubricObj = {
       "total": total,
